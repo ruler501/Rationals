@@ -3,18 +3,14 @@ import os
 import math
 import sys
 
-#basedir = '/home/dsr0088/'
-#basedir = 'D:\\C++\\Rationals\\'
-qsv = {}
+qsv = {1 : 2}
 qs = []
-#for d in filter(os.path.isdir, [os.path.join(basedir,f) for f in os.listdir(basedir)]):
-#	os.chdir(d)
 for fn in glob.glob('*.csv'):
 	nqs = []
 	f = open(fn)
 	for line in f.readlines():
 		line = line.strip()
-		if len(line.split('/')) != 2 or line.split('/')[0] == 'q':
+		if len(line.split('/')) != 2:
 			continue
 		q = int(line.split('/')[1])
 		if q in qs:
@@ -23,9 +19,9 @@ for fn in glob.glob('*.csv'):
 		if q not in nqs:
 			nqs.append(q)                                                      
 		try:
-			qsv[int(line.split('/')[1])] += 2
+			qsv[int(line.split('/')[1])] += 1
 		except:
-			qsv[int(line.split('/')[0])] = 2
+			qsv[int(line.split('/')[1])] = 1
 	f.close()
 	qs += nqs
 
@@ -44,4 +40,35 @@ for q in qs:
 	datafile.write(str(q)+','+str(qsv[q])+','+str(q % 3)+','+str(int(q**(math.log(2)/math.log(3))))+'\n')
 datafile.close()
 
+statdata = open('../stats.csv', 'w')
+statdata.write('N,Rationals,Denominators,Rationals per Denominator\n')
+total = {}
+for n in range(0,maxn):
+	minQ = 3**n
+	maxQ = 3**(n+1)
+	total[n] = [0,0]
+	
+	closest = [0,0]
+	for i in range(len(qs)):
+	    if qs[closest[1]] < qs[i] and qs[i] < maxQ:
+	        closest[1] = i
+	    if qs[closest[0]] > qs[i] and qs[i] > minQ:
+	        closest[0] = i
+	
+	for i in range(closest[0],closest[1]):
+		total[n][0] += qsv[qs[i]]
+		total[n][1] += 1
+	try:
+	    statdata.write(str(n)+','+str(total[n][0])+','+str(total[n][1])+','+str(total[n][0]/total[n][1])+'\n')
+	except ZeroDivisionError:
+		statdata.write(',,,\n')
+a = None
 
+statdata.write('\n')
+	
+statdata.write('N,Fraction Ratio,Denominator Ratio,Rational/Denominator Ratio\n')
+for n in range(1,maxn):
+	try:
+		statdata.write(str(n)+','+str(float(total[n][0])/total[n-1][0])+','+str(float(total[n][1])/total[n-1][1])+','+str((total[n][0]/total[n][1])/(total[n-1][0]/total[n-1][1]))+'\n') 
+	except ZeroDivisionError:
+		statdata.write(',,,\n')
