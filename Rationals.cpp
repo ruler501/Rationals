@@ -44,26 +44,26 @@ void genRational(unsigned long long minNum, unsigned long long maxNum, int step,
 int main(int argc, char* argv[]){
     unsigned long long minNum, maxNum;
     int THREADS = thread::hardware_concurrency() != 0 ? thread::hardware_concurrency() : 8;
-    if (argc == 2){
+    switch(argc){
+    case 2:
         minNum = pow(3, atoi(argv[1]));
         maxNum = pow(3, atoi(argv[1]) + 1);
-    }
-    else if (argc == 3){
-        minNum = pow(3, atoi(argv[1]));
-        maxNum = pow(3, atoi(argv[2]));
-    }
-    else if (argc == 4){
-        minNum = pow(3, atoi(argv[1]));
-        maxNum = pow(3, atoi(argv[2]));
+        break;
+    case 4:
         THREADS = atoi(argv[3]);
-    }
-    else if (argc == 5){
+    case 3:
+        minNum = pow(3, atoi(argv[1]));
+        maxNum = pow(3, atoi(argv[2]));
+        break;
+    case 5:
         minNum = atoi(argv[1]);
         maxNum = atoi(argv[2]);
         THREADS = atoi(argv[3]);
         outfile = new ofstream(argv[4]);
+        break;
+    default:
+        return 1;
     }
-    else return -1;
     string* tempStream = nullptr;
     thread* tempThread = nullptr;
     vector<thread*> usedThreads;
