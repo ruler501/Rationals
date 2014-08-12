@@ -7,8 +7,9 @@ qsv = {1 : 2}
 qs = []
 for fn in glob.glob('*.csv'):
 	nqs = []
+	print("Loading data from "+fn)
 	f = open(fn)
-	for line in f.readlines():
+	for line in f:
 		line = line.strip()
 		if len(line.split('/')) != 2:
 			continue
@@ -32,6 +33,7 @@ max = 3**maxn
 
 qs.sort()
 
+print("Writing data")
 datafile = open('../data.csv', 'w')
 datafile.write('Q,Rationals,Q mod 3,Maximum Expected\n')
 for q in qs:
@@ -40,6 +42,7 @@ for q in qs:
 	datafile.write(str(q)+','+str(qsv[q])+','+str(q % 3)+','+str(int(q**(math.log(2)/math.log(3))))+'\n')
 datafile.close()
 
+print("Writing stats")
 statdata = open('../stats.csv', 'w')
 statdata.write('N,Rationals,Denominators,Rationals per Denominator\n')
 total = {}
