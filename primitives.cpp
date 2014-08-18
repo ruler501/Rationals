@@ -20,11 +20,10 @@ inline void convCTernary(long long int const &pq, unsigned char const &l, mpq_cl
 void printRationals(unsigned char const &n, unsigned long long int const &minJ, unsigned long long int const &maxJ){
 	std::stringstream ss;
 	mpq_class M2(1, pow(3,n) - 1);
-	bool skip = false;
-	for(unsigned long long int j=minJ; j < maxJ; j++){
+	for(unsigned long long int j=minJ; j < maxJ;){
 		std::stringstream ss;
-		for(unsigned long long int newMaxJ=j+std::max((minJ-maxJ)/32,1); j < newMaxJ && j <= maxJ; j++){
-			skip = false;
+		for(unsigned long long int newMaxJ=j+((minJ-maxJ)>>6 > 1 ? (minJ-maxJ)>>6 : minJ-maxJ); j < newMaxJ && j <= maxJ; j++){
+			bool skip = false;
 			for(int i = 1; i<=n/2 && !skip; i++){
 				if(n%i == 0){
 					if(j  % (((1<<n)-1)/((1<<i)-1)) == 0) skip = true;
