@@ -8,6 +8,8 @@
 #include<future>
 #include<mutex>
 
+std::fstream outfile;
+
 int THREADS = std::thread::hardware_concurrency() != 0 ? std::thread::hardware_concurrency() : 8;
 std::mutex outMutex;
 
@@ -35,7 +37,7 @@ void printRationals(unsigned char const &n, unsigned long long int const &minJ, 
 			ss << mpq_class(mpq_class(2)*M1*M2) << std::endl;
 		}
 		outMutex.lock();
-		std:: cout << ss.str();
+		outfile << ss.str();
 		outMutex.unlock();
 	}
 }
@@ -44,6 +46,7 @@ void printRationals(unsigned char const &n, unsigned long long int const &minJ, 
 
 int main(int argc, char* argv[]){
 	std::vector<std::thread> ourThreads;
+	outfile.open("out.csv", std::fstream::out);
     if(argc == 2){
 		for(int i = 3; i<std::min(5,atoi(argv[1])); i++){
 			printRationals(i, 1, 1<<i);
