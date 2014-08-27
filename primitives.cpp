@@ -10,21 +10,43 @@
 
 std::fstream outfile;
 
-int THREADS = std::thread::hardware_concurrency() != 0 ? std::thread::hardware_concurrency() : 8;
+int THREADS = std::thread::hardware_concurrency() ? std::thread::hardware_concurrency() : 8;
 std::mutex outMutex;
 
+std::default_random_engine generator;
 
-inline void convCTernary(long long int const &pq, unsigned char const &l, mpq_class &M1){
+inline void convCTernary(unsigned long long int const &pq, unsigned char const &l, mpq_class &M1){
     for(int j=0; j < l; j++)
         M1 += mpq_class(int(pq >> (j) & 1)) * mpq_class(std::pow(3,j));
 }
 
+inline void convCTernaryOpt(unsigned long long int const &pq, unsigned char const &l, mpq_class &M1, mpq_class const &lastR){
+	int length=0;
+	if (pq != 0) for(int i = 0; i < l; i++){
+		if (!((pq-1 >> i)&1)){
+			length = i;
+			break;
+		}
+	}
+	//length = __builtin_ctz(~last);
+	M1 = lastR;
+    for(int j=0; j < length; j++)
+        M1 -= mpq_class(std::pow(3,j));
+	M1 += mpq_class(std::pow(3,length));
+}
+
 void printRationals(unsigned char const &n, unsigned long long int const &minJ, unsigned long long int const &maxJ){
 	std::stringstream ss;
-	mpq_class M2(1, pow(3,n) - 1);
-	for(unsigned long long int j=minJ; j < maxJ;){
+	std::uniform_int_distribution<unsigned long long int> distribution(1,(minJ-maxJ)>>5);
+	mpq_class M2(1, pow(3,n) - 1), M1(0), lastR(0);
+	convCTernary(minJ, n, M1);
+	outMutex.lock();
+	outfile << mpq_class(mpq_class(2)*M1*M2) << std::endl;
+	outMutex.unlock();
+	for(unsigned long long int j=minJ+1; j < maxJ;){
 		std::stringstream ss;
-		for(unsigned long long int newMaxJ=j+((minJ-maxJ)>>6 > 1 ? (minJ-maxJ)>>6 : minJ-maxJ); j < newMaxJ && j <= maxJ; j++){
+		unsigned long long jump = distribution(generator);
+		for(unsigned long long int newMaxJ=jump > 1 ? jump: minJ-maxJ; j < newMaxJ && j <= maxJ; j++){
 			bool skip = false;
 			for(int i = 1; i<=n/2 && !skip; i++){
 				if(n%i == 0){
@@ -32,8 +54,8 @@ void printRationals(unsigned char const &n, unsigned long long int const &minJ, 
 				}
 			}
 			if(skip) continue;
-			mpq_class M1(0);
-			convCTernary(j, n, M1);
+			M1 = 0;
+			convCTernaryOpt(j, n, M1, lastR);
 			ss << mpq_class(mpq_class(2)*M1*M2) << std::endl;
 		}
 		outMutex.lock();
@@ -52,8 +74,8 @@ int main(int argc, char* argv[]){
 			printRationals(i, 1, 1<<i);
 		}
 		for(int i = 5; i<atoi(argv[1]); i++){
-			for(int j=0; j < 2*THREADS; j++){
-				ourThreads.push_back(std::thread(printRationals, i, (j*(1<<(i-1)))/THREADS+1, ((j+1)*(1<<(i-1)))/THREADS));
+			for(int j=0; j < THREADS; j++){
+				ourThreads.push_back(std::thread(printRationals, i, (j*(1<<(i)))/THREADS+1, ((j+1)*(1<<(i)))/THREADS));
 			}
 		}
     }
@@ -62,8 +84,8 @@ int main(int argc, char* argv[]){
 			printRationals(i, 1, 1<<i);
 		}
 		for(int i = 5; i<atoi(argv[2]); i++){
-			for(int j=0; j < 2*THREADS; j++){
-				ourThreads.push_back(std::thread(printRationals, i, (j*(1<<(i-1)))/THREADS+1, ((j+1)*(1<<(i-1)))/THREADS));
+			for(int j=0; j < THREADS; j++){
+				ourThreads.push_back(std::thread(printRationals, i, (j*(1<<(i)))/THREADS+1, ((j+1)*(1<<(i)))/THREADS));
 			}
 		}
     }
